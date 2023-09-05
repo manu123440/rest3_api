@@ -70,7 +70,7 @@ router.post('/sendOtp',
 			else {
 				let rNumber = '';
 		    	rNumber = random();
-		    	console.log(rNumber);
+		    	// console.log(rNumber);
 
 		    	if (lang === array[1].lang) {
 		    		msgBody = `Code de connexion : ${rNumber}. ${array[1].msg}`;
@@ -97,61 +97,54 @@ router.post('/sendOtp',
 				request(opt1, function (error, response) {
 				  	if (error) throw new Error(error);
 				  	else {
-				  		// console.log(response.body);
+				  		let x = response.body;
+				  		// console.log(x, typeof x);
 
-				  		return res.json({
-				  			otp: rNumber,
-				  			response: response.body
-				  		})
-				  		// let x = JSON.parse(response.body);
+				  		if (x === 'Sent') {
+				  			// insert otp into database
 
-				  		// console.log(x);
+				      		let opt2 = updateFunction(
+				      			"update users set otp = '"
+				      			.concat(`${rNumber}`)
+				      			.concat("' where email = '")
+				      			.concat(`${email}`)
+				      			.concat("'"),
+				      			"select * from users where email = '"
+						        .concat(`${email}`)
+						        .concat("'")
+				      		)
 
-				  		// if (x.length >= 1) {
-				  		// 	// insert otp into database
+				      		// console.log(opt1);
 
-				      	// 	let opt2 = updateFunction(
-				      	// 		"update users set otp = '"
-				      	// 		.concat(`${rNumber}`)
-				      	// 		.concat("' where email = '")
-				      	// 		.concat(`${email}`)
-				      	// 		.concat("'"),
-				      	// 		"select * from users where email = '"
-						//         .concat(`${email}`)
-						//         .concat("'")
-				      	// 	)
+				      		request(opt2, (error, response) => {
+				      			if (error) throw new Error(error);
+							    else {
+							        let y = JSON.parse(response.body);
 
-				      	// 	// console.log(opt1);
+							        // console.log(x);
 
-				      	// 	request(opt2, (error, response) => {
-				      	// 		if (error) throw new Error(error);
-						// 	    else {
-						// 	        let y = JSON.parse(response.body);
+							        if (y.length >= 1) {
+							        	return res.json({
+								    		isSuccess: true,
+								    		errorMessage: ""
+								    	})
+							        }
+							        else {
+							        	return res.json({
+								    		isSuccess: false,
+								    		errorMessage: "You are not registered..."
+								    	})
+							        }
+							    }
+				      		})
+				  		}
 
-						// 	        // console.log(x);
-
-						// 	        if (y.length >= 1) {
-						// 	        	return res.json({
-						// 		    		isSuccess: true,
-						// 		    		errorMessage: "E-mail sent successfully!"
-						// 		    	})
-						// 	        }
-						// 	        else {
-						// 	        	return res.json({
-						// 		    		isSuccess: false,
-						// 		    		errorMessage: "You are not registered..."
-						// 		    	})
-						// 	        }
-						// 	    }
-				      	// 	})
-				  		// }
-
-				  		// else {
-				  		// 	return res.json({
-				      	// 		isSuccess: false,
-				      	// 		errorMessage: "Error sending E-mail...."
-				      	// 	})
-				  		// }
+				  		else {
+				  			return res.json({
+				      			isSuccess: false,
+				      			errorMessage: "Error sending E-mail...."
+				      		})
+				  		}
 				  	}
 				})
 		    }
