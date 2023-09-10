@@ -110,7 +110,7 @@ router.get('/video/:id',
 
 											  // console.log(fileCode);
 
-											  const url = `https://uptobox.fr/api/streaming?token=45701da784b02110e845cb7b8a8872577d32q&file_code=${fileCode}`;
+											  const url = `https://uptobox.com/api/streaming?token=45701da784b02110e845cb7b8a8872577d32q&file_code=${fileCode}`;
 
 											  const opt3 = {
 												  'method': 'GET',
