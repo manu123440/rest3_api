@@ -108,7 +108,7 @@ router.get('/video/:id',
 											  const extractedString = match[1];
 											  const fileCode = extractedString;
 
-											  console.log(fileCode);
+											  // console.log(fileCode);
 
 											  const url = `https://uptobox.fr/api/streaming?token=45701da784b02110e845cb7b8a8872577d32q&file_code=${fileCode}`;
 
@@ -124,7 +124,7 @@ router.get('/video/:id',
 												  else {
 												  	let z = JSON.parse(response.body);
 
-												  	// console.log(z);
+												  	console.log(z);
 
 												  	if (z.message === 'Success') {
 												  		return res.json({
