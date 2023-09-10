@@ -119,7 +119,16 @@ router.post('/payment',
 
 									  	// console.log(y);
 
-									  	if (y.hasOwnProperty('payment_id')) {
+									  	if (y.hasOwnProperty('code') && y.code === 'AMOUNT_MINIMAL_ERROR') {
+									  		return res.json({
+										  		isSuccess: false,
+										  		address: '',
+													amount: '',
+										  		errorMessage: 'Change Crypto'
+										  	})
+									  	}
+
+									  	else if (y.hasOwnProperty('payment_id')) {
 									  		// update payment_id in db
 
 									  		let opt3 = updateFunction(
