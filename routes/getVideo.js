@@ -86,7 +86,7 @@ router.get('/video/:id',
 					      else {
 					       	let x = JSON.parse(response.body);
 
-					       	console.log(x);
+					       	// console.log(x);
 
 					       	if (x.length >= 1) {
 					       		const i = x[0].video_url;
@@ -124,7 +124,7 @@ router.get('/video/:id',
 												  else {
 												  	let z = JSON.parse(response.body);
 
-												  	console.log(z);
+												  	// console.log(z);
 
 												  	if (z.message === 'Success') {
 												  		return res.json({
