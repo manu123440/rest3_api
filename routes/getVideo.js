@@ -34,11 +34,15 @@ router.get('/video/:id',
 			.normalizeEmail()
 			.isEmail()
 			.withMessage('Invalid email'),
+		body('lang')
+			.trim()
+			.notEmpty()
+			.withMessage('Language required')
 	],
 	async (req, res, next) => {
 		const { id } = req.params;
 
-		const { email } = req.body;
+		const { email, lang } = req.body;
 
 		// console.log(id);
 
@@ -78,6 +82,8 @@ router.get('/video/:id',
 							let opt2 = selectFunction(
 								"select * from videos where video_id = '"
 									.concat(`${id}`)
+									.concat("' AND lang = '")
+									.concat(`${lang}`)
 									.concat("'")
 							);
 
