@@ -91,7 +91,7 @@ router.post('/checkSub',
 
               const days = Math.floor(next / (24*60*60*1000));
 
-              console.log(next, typeof next, days, typeof days);
+              // console.log(next, typeof next, days, typeof days);
 
               if (plan_id !== 'null') {
                 let opt2 = selectFunction(
