@@ -4,6 +4,8 @@ const { param, body, validationResult } = require('express-validator');
 
 const request = require('request');
 
+const axios = require('axios');
+
 const router = express.Router();
 
 const baseUrl = "https://bhaveshnetflix.live/";
@@ -34,15 +36,17 @@ router.get('/video/:id',
 			.normalizeEmail()
 			.isEmail()
 			.withMessage('Invalid email'),
-		body('lang')
-			.trim()
-			.notEmpty()
-			.withMessage('Language required')
 	],
 	async (req, res, next) => {
 		const { id } = req.params;
 
-		const { email, lang } = req.body;
+		const { email } = req.body;
+
+		const videoArray = [];
+
+		const langArray = [];
+
+		const fileCodeArray = [];
 
 		// console.log(id);
 
@@ -82,8 +86,6 @@ router.get('/video/:id',
 							let opt2 = selectFunction(
 								"select * from videos where video_id = '"
 									.concat(`${id}`)
-									.concat("' AND lang = '")
-									.concat(`${lang}`)
 									.concat("'")
 							);
 
@@ -95,75 +97,92 @@ router.get('/video/:id',
 					       	// console.log(x);
 
 					       	if (x.length >= 1) {
-					       		const i = x[0].video_url;
+					       		x.forEach(async (i) => {
+					       			const lang = i.lang;
+					       			const video = i.video_url;
 
-					       		if (i === '') {
-					       			return res.json({
-												isSuccess: false,
-												videoUrl: "",
-												errorMessage: "No data found..."
+					       			langArray.push(lang);
+
+					       			if (video !== '') {
+					       				const regex = /\/([^/]+)$/; // Matches the last part of the URL after the last "/"
+
+												const match = video.match(regex);
+
+												if (match) {
+												  const extractedString = match[1];
+												  const fileCode = extractedString;
+
+												  // console.log(fileCode);
+
+												  fileCodeArray.push({ lang: i.lang, fileCode: fileCode });
+												}
+					       			}
+					       			else {
+												fileCodeArray.push({ lang: i.lang, fileCode: '' });
+					       			}
+					       		});
+
+					       		// console.log(fileCodeArray);
+
+					       		Promise.all(fileCodeArray.map(i => {
+										    const url = `https://uptobox.com/api/streaming?token=45701da784b02110e845cb7b8a8872577d32q&file_code=${i.fileCode}`;
+
+										    const opt3 = {
+										      'method': 'GET',
+										      'headers': {
+					    							accept: 'application/json',
+										      }
+										    };
+
+										    return axios.get(url, opt3) // Pass your options object as the second argument
+									        .then(response => {
+									        		// console.log(response.data);
+									            // Assuming the response contains JSON data
+									            return { ...response.data, lang: i.lang };
+									        })
+									        .catch(error => {
+									            console.log(error);
+									            // Handle the error as needed
+									            // return { error: 'An error occurred' }; // You can return an error object or some default value
+									        });
+										})).then(results => {
+									    // console.log(results);
+
+									    if (results.length > 1) {
+									    	results.forEach(i => {
+									    		if (i.statusCode === 0) {
+										    		const videoUrl = i.data.streamLinks.src;
+										    		const videoLang = i.lang;
+										    		// console.log(videoUrl, videoLang);
+										    		videoArray.push({ lang: videoLang, url: videoUrl });
+										    	}
+										    	else {
+										    		videoArray.push({ lang: i.lang, url: 'No data found...' });
+										    	}
+									    	})
+									    }
+
+									    else {
+										    const videoUrl = results.data.streamLinks.src;
+									    	const videoLang = results.lang;
+										    videoArray.push({ lang: videoLang, url: videoUrl });
+										  }
+
+									    // console.log(videoArray, langArray);
+
+									    return res.json({
+												isSuccess: true,
+												langArray: langArray,
+												videoUrl: videoArray,
+												errorMessage: ""
 											})
-					       		}
-
-					       		else {
-						       		const regex = /\/([^/]+)$/; // Matches the last part of the URL after the last "/"
-
-											const match = i.match(regex);
-
-											if (match) {
-											  const extractedString = match[1];
-											  const fileCode = extractedString;
-
-											  // console.log(fileCode);
-
-											  const url = `https://uptobox.com/api/streaming?token=45701da784b02110e845cb7b8a8872577d32q&file_code=${fileCode}`;
-
-											  const opt3 = {
-												  'method': 'GET',
-												  'url': url,
-												  'headers': {
-												  }
-												};
-
-												request(opt3, function (error, response) {
-												  if (error) throw new Error(error);
-												  else {
-												  	let z = JSON.parse(response.body);
-
-												  	// console.log(z);
-
-												  	if (z.message === 'Success') {
-												  		return res.json({
-																isSuccess: true,
-																videoUrl: z.data.streamLinks.src,
-																errorMessage: ""
-															})
-												  	}
-
-												  	else {
-												  		return res.json({
-																isSuccess: false,
-																videoUrl: "",
-																errorMessage: "No data found..."
-															})
-												  	}
-												  }
-												});
-											} 
-
-											else {
-											  return res.json({
-													isSuccess: false,
-													videoUrl: "",
-													errorMessage: "No data found..."
-												})
-											}	
-										}				        	
+										});				        	
 					       	}
 
 					       	else {
 					        	return res.json({
 											isSuccess: false,
+											langArray: "",
 											videoUrl: "",
 											errorMessage: "No data found..."
 										})
@@ -174,6 +193,7 @@ router.get('/video/:id',
 						else {
 							return res.json({
 								isSuccess: false,
+								langArray: "",
 								videoUrl: "",
 								errorMessage: "No Subscription Found..."
 							})
@@ -186,6 +206,7 @@ router.get('/video/:id',
 		catch(error) {
 			return res.json({
 				isSuccess: false,
+				langArray: "",
 				videoUrl: "",
 				errorMessage: "No data found..."
 			})
